@@ -1,0 +1,16 @@
+[Unit]
+Description=Orion Telegram Bot - VPS File Transfer Service
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/orionbot
+ExecStart=/opt/orionbot/.venv/bin/python /opt/orionbot/main.py
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
