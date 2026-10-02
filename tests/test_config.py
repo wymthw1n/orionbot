@@ -41,13 +41,13 @@ def test_local_api_config(tmp_path) -> None:
     with mock.patch.dict(os.environ, env_vars, clear=True):
         config = Config()
         assert config.bot_api_server == "http://127.0.0.1:8081"
-        assert config.is_local_api is False
+        assert config.is_local_api is True
         assert config.max_file_size_mb == 2000
 
-    env_vars_explicit = {**env_vars, "BOT_API_IS_LOCAL": "true"}
-    with mock.patch.dict(os.environ, env_vars_explicit, clear=True):
-        config_explicit = Config()
-        assert config_explicit.is_local_api is True
+    env_vars_disabled = {**env_vars, "BOT_API_IS_LOCAL": "false"}
+    with mock.patch.dict(os.environ, env_vars_disabled, clear=True):
+        config_disabled = Config()
+        assert config_disabled.is_local_api is False
 
 
 def test_invalid_allowed_users_raises_error() -> None:

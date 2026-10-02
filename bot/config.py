@@ -57,11 +57,13 @@ class Config:
         is_local_raw = os.getenv("BOT_API_IS_LOCAL", "").strip().lower()
         if is_local_raw in ("true", "1", "yes"):
             self.is_local_api: bool = True
-        else:
-            # Default to False: even when running a local Bot API server (e.g. Docker),
-            # streaming via HTTP over loopback is reliable, fast, and does not require
-            # sharing identical filesystem paths between the bot and the API server container.
+        elif is_local_raw in ("false", "0", "no"):
             self.is_local_api = False
+        else:
+            # Auto-detect local server if URL contains localhost or 127.0.0.1
+            self.is_local_api = bool(
+                self.bot_api_server and ("localhost" in self.bot_api_server or "127.0.0.1" in self.bot_api_server)
+            )
 
         # Maximum file size in MB (defaults to 2000 if custom API server, otherwise 50)
         default_max = 2000 if self.bot_api_server else 50

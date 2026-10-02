@@ -171,8 +171,6 @@ if [ -f "$ENV_FILE" ]; then
   elif [ -n "$EXISTING_DIR" ]; then
     CURRENT_DIR="$EXISTING_DIR"
   fi
-  # Fix BOT_API_IS_LOCAL if set to true (Docker Bot API requires HTTP streaming, i.e. false)
-  sed -i 's|^BOT_API_IS_LOCAL=true|BOT_API_IS_LOCAL=false|' "$ENV_FILE" 2>/dev/null || true
 
   echo -e "\n${YELLOW}ℹ️  An existing .env file was found at:${NC} $ENV_FILE"
   prompt_yes_no "Do you want to keep existing settings? [Y/n]" "y" KEEP_EXISTING
@@ -258,6 +256,7 @@ if [ "$RECONFIGURE" = true ]; then
     systemctl enable --now docker > /dev/null 2>&1 || true
 
     echo -e "${CYAN}🚀 Starting Local Telegram Bot API Server container (port 8081)...${NC}"
+    mkdir -p /var/lib/telegram-bot-api
     docker pull aiogram/telegram-bot-api:latest -q || true
     docker stop telegram-bot-api 2>/dev/null || true
     docker rm telegram-bot-api 2>/dev/null || true
@@ -265,16 +264,15 @@ if [ "$RECONFIGURE" = true ]; then
       --name telegram-bot-api \
       --restart always \
       -p 8081:8081 \
-      -v telegram-bot-api-data:/var/lib/telegram-bot-api \
+      -v /var/lib/telegram-bot-api:/var/lib/telegram-bot-api \
       -e TELEGRAM_API_ID="${CURRENT_API_ID}" \
       -e TELEGRAM_API_HASH="${CURRENT_API_HASH}" \
-      aiogram/telegram-bot-api:latest \
-      --local \
-      --dir=/var/lib/telegram-bot-api > /dev/null
+      -e TELEGRAM_LOCAL="true" \
+      aiogram/telegram-bot-api:latest > /dev/null
 
     CURRENT_SERVER="http://127.0.0.1:8081"
     CURRENT_MAX="2000"
-    IS_LOCAL="false"
+    IS_LOCAL="true"
     echo -e "${GREEN}✓ Local Telegram Bot API Server is running on http://127.0.0.1:8081${NC}"
   else
     echo -e "${GREEN}✓ Using Official Telegram Bot API (50MB send / 20MB receive limit).${NC}"
