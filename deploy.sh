@@ -171,6 +171,8 @@ if [ -f "$ENV_FILE" ]; then
   elif [ -n "$EXISTING_DIR" ]; then
     CURRENT_DIR="$EXISTING_DIR"
   fi
+  # Fix BOT_API_IS_LOCAL if set to true (Docker Bot API requires HTTP streaming, i.e. false)
+  sed -i 's|^BOT_API_IS_LOCAL=true|BOT_API_IS_LOCAL=false|' "$ENV_FILE" 2>/dev/null || true
 
   echo -e "\n${YELLOW}ℹ️  An existing .env file was found at:${NC} $ENV_FILE"
   prompt_yes_no "Do you want to keep existing settings? [Y/n]" "y" KEEP_EXISTING
@@ -272,7 +274,7 @@ if [ "$RECONFIGURE" = true ]; then
 
     CURRENT_SERVER="http://127.0.0.1:8081"
     CURRENT_MAX="2000"
-    IS_LOCAL="true"
+    IS_LOCAL="false"
     echo -e "${GREEN}✓ Local Telegram Bot API Server is running on http://127.0.0.1:8081${NC}"
   else
     echo -e "${GREEN}✓ Using Official Telegram Bot API (50MB send / 20MB receive limit).${NC}"
@@ -326,7 +328,7 @@ SERVICE_DEST="/etc/systemd/system/${SERVICE_NAME}.service"
 
 UNIT_AFTER="network.target"
 UNIT_WANTS=""
-if [ "${IS_LOCAL:-false}" = "true" ]; then
+if [ -n "$CURRENT_SERVER" ] && [[ "$CURRENT_SERVER" =~ (localhost|127\.0\.0\.1) ]]; then
   UNIT_AFTER="network.target docker.service"
   UNIT_WANTS="Wants=docker.service"
 fi
